@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
   const [pokemon, setPokemon] = useState("");
   const [pokemonImagenUrl, setPokemonImagenUrl] = useState("");
   const [yaLeDioClic, setYaLeDioClic] = useState(false);
-  const [informacion, setInformacion] = useState("");
+  const [yaAtrapados, setYaAtrapados] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const leerPokemon = await fetch("http://localhost:3000/pokemon/leer");
+      const respuesta = await leerPokemon.json();
+      setYaAtrapados(respuesta.pokemon);
+      console.log(respuesta);
+    };
+    fetchData();
+  }, []);
 
   const darClic = async () => {
-
     setYaLeDioClic(true);
 
     const obtenerPokemon = await fetch(
@@ -19,11 +28,17 @@ function App() {
 
     const data = await obtenerPokemon.json();
 
+    const guardarEnBD = await fetch(
+      `http://localhost:3000/pokemon/guardar?nombre=${pokemon}&imagen=${data.sprites.front_default}`
+    );
+
+    const respuesta = await guardarEnBD.json();
+
+    console.log(respuesta);
+
     setPokemonImagenUrl(data.sprites.front_default);
-    setInformacion(data.abilities[0].ability.name);
 
     console.log(data);
-
   };
 
   const cambioInput = (e) => {
@@ -37,9 +52,10 @@ function App() {
         <input value={pokemon} onChange={(e) => cambioInput(e)} />
         <button onClick={darClic}>Catch pokemon</button>
         {yaLeDioClic && <img src={pokemonImagenUrl} alt={"pokemon image"} />}
-        <div>
-          {informacion}
-        </div>
+        {yaAtrapados.map((pokemon) => {
+          console.log(pokemon.imagen)
+          return <img src={pokemon.imagen} alt={pokemon.nombre} />;
+        })}
       </div>
     </div>
   );
